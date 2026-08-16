@@ -24,6 +24,11 @@ LinedBackgroundView::LinedBackgroundView(double pageWidth, double pageHeight, Co
         // A negative value puts the margin line on the right hand side
         margin += pageWidth;
     }
+
+    hasMargin2 = config.loadValue(CFG_MARGIN_2, margin2);
+    if (margin2 < 0) {
+        margin2 += pageWidth;
+    }
 }
 
 void LinedBackgroundView::draw(cairo_t* cr) const {
@@ -37,6 +42,10 @@ void LinedBackgroundView::draw(cairo_t* cr) const {
     cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
     cairo_move_to(cr, margin, 0);
     cairo_line_to(cr, margin, pageHeight);
+    if (hasMargin2) {
+        cairo_move_to(cr, margin2, 0);
+        cairo_line_to(cr, margin2, pageHeight);
+    }
     cairo_stroke(cr);
     cairo_restore(cr);
 }

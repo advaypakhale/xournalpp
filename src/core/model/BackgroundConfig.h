@@ -40,6 +40,7 @@ constexpr static char CFG_FOREGROUND_COLOR_2[] = "f2";
 constexpr static char CFG_ALT_FOREGROUND_COLOR_2[] = "af2";
 constexpr static char CFG_LINE_WIDTH[] = "lw";
 constexpr static char CFG_MARGIN[] = "m1";
+constexpr static char CFG_MARGIN_2[] = "m2";
 constexpr static char CFG_ROUND_MARGIN[] = "rm";
 constexpr static char CFG_RASTER[] = "r1";
 constexpr static char CFG_BOLD_LINE_INTERVAL[] = "bli";

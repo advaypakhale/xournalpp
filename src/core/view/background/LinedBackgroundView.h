@@ -30,6 +30,10 @@ protected:
     Color vLineColor;
     double margin = 72.0;  // default = 1 inch. Negative values put the margin on the right hand side.
 
+    // Optional second vertical line. Negative values are measured from the right hand side.
+    double margin2 = 0.0;
+    bool hasMargin2 = false;
+
     constexpr static Color DEFAULT_V_LINE_COLOR = Colors::xopp_deeppink;
     constexpr static Color ALT_DEFAULT_V_LINE_COLOR = Colors::xopp_midnightblue;
 };

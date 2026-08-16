@@ -17,6 +17,11 @@ name=Ruled with vertical line on the right
 format=lined
 config=m1=-72
 
+[predefinedLinedBothMargins]
+name=Ruled with vertical lines on both sides
+format=lined
+config=m1=72,m2=-72
+
 [predefinedStaves]
 name=Staves
 format=staves
