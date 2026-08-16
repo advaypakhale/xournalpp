@@ -1,0 +1,78 @@
+name: Sync with upstream
+
+# Keeps this fork's patches sitting on top of the newest upstream release.
+# `master` is fast-forwarded to upstream, then the commits on `two-margins`
+# are rebased onto the newest v*.*.* tag and force-pushed. A rebase that
+# conflicts is aborted and reported as an issue rather than left half-applied.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: two-margins
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/xournalpp/xournalpp.git
+          git fetch upstream --tags --force
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fast-forward master
+        run: git push origin upstream/master:refs/heads/master
+
+      - name: Compare current base against newest release
+        id: check
+        run: |
+          base=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' HEAD)
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          if [ "$base" = "$latest" ]; then
+            echo "Already on $base, nothing to do."
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Base $base is behind $latest."
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rebase onto newest release
+        if: steps.check.outputs.stale == 'true'
+        id: rebase
+        run: |
+          if git rebase --onto "${{ steps.check.outputs.latest }}" "${{ steps.check.outputs.base }}"; then
+            git push --force-with-lease origin two-margins
+          else
+            git rebase --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Report conflict
+        if: failure() && steps.rebase.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Rebase onto ${{ steps.check.outputs.latest }} conflicts" \
+            --body "Rebasing \`two-margins\` from \`${{ steps.check.outputs.base }}\` onto \`${{ steps.check.outputs.latest }}\` hit a conflict and was aborted. The branch is untouched and still builds against \`${{ steps.check.outputs.base }}\`. Resolve it by hand:
+
+          \`\`\`
+          git fetch upstream --tags
+          git rebase --onto ${{ steps.check.outputs.latest }} ${{ steps.check.outputs.base }} two-margins
+          git push --force-with-lease origin two-margins
+          \`\`\`
+
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
