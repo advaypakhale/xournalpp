@@ -17,6 +17,9 @@ permissions:
 jobs:
   rebase:
     runs-on: ubuntu-latest
+    outputs:
+      stale: ${{ steps.check.outputs.stale }}
+      new_sha: ${{ steps.rebase.outputs.new_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,6 +57,7 @@ jobs:
         run: |
           if git rebase --onto "${{ steps.check.outputs.latest }}" "${{ steps.check.outputs.base }}"; then
             git push --force-with-lease origin two-margins
+            echo "new_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           else
             git rebase --abort
             echo "conflict=true" >> "$GITHUB_OUTPUT"
@@ -76,3 +80,10 @@ jobs:
           \`\`\`
 
           Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  deb:
+    needs: rebase
+    if: needs.rebase.outputs.stale == 'true'
+    uses: ./.github/workflows/build-deb.yml
+    with:
+      head_sha: ${{ needs.rebase.outputs.new_sha }}

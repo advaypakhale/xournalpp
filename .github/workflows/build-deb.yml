@@ -1,0 +1,41 @@
+name: Build deb
+
+# Wraps upstream's reusable Linux installer workflow, which already builds with
+# -DCPACK_GENERATOR="TGZ;DEB" and uploads the result. The .deb links against the
+# libraries of the distro it was built on, so pick the target that matches the
+# machine you install it on.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Distribution to build for
+        type: choice
+        default: ubuntu-24.04
+        options:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-26.04
+          - ubuntu-24.04-arm
+          - ubuntu-26.04-arm
+          - debian
+  workflow_call:
+    inputs:
+      target:
+        type: string
+        default: ubuntu-24.04
+      head_sha:
+        description: Commit to build; defaults to the SHA that triggered the run
+        type: string
+        default: ''
+
+jobs:
+  deb:
+    uses: ./.github/workflows/make-installer-linux.yml
+    with:
+      runner: ${{ inputs.target == 'debian' && 'ubuntu-latest' || inputs.target }}
+      displayed_name: ${{ inputs.target }}
+      container_image: ${{ inputs.target == 'debian' && 'ghcr.io/xournalpp/debian-latest-sudo:master' || '' }}
+      extra_packages: ${{ inputs.target == 'debian' && 'build-essential lsb-release git' || '' }}
+      head_sha: ${{ inputs.head_sha }}
+      artifact_version_suffix: '-two-margins'
