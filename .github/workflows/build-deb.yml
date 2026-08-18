@@ -11,7 +11,7 @@ on:
       target:
         description: Distribution to build for
         type: choice
-        default: ubuntu-24.04
+        default: ubuntu-22.04
         options:
           - ubuntu-22.04
           - ubuntu-24.04
@@ -23,7 +23,7 @@ on:
     inputs:
       target:
         type: string
-        default: ubuntu-24.04
+        default: ubuntu-22.04
       head_sha:
         description: Commit to build; defaults to the SHA that triggered the run
         type: string
